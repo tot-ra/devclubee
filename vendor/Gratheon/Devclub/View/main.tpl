@@ -51,7 +51,7 @@
 
 			<ul class="nav pull-right">
 				<li><a href="#"><strong id="mail">{$email}</strong></a></li>
-				<li><a href="https://github.com/Gratheon/devclub">About</a></li>
+				<li><a href="https://github.com/Gratheon/devclubee">About</a></li>
 				<li class="logged_in" style="{if !$email}display: none;{/if}">
 					<a href="#" id="logout" title="Sign-in with BrowserID"> Välja
 						<i class="icon-off icon-white"></i></a></li>
