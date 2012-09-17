@@ -38,10 +38,16 @@ $(document).ready(function () {
 		}
 	});
 
-	Devclub.Collections.CompletedStories = Backbone.Collection.extend({
+	Devclub.Collections.PublicStories = Backbone.Collection.extend({
 		order: 'harmonic_weight',
 		url: function () {
 			return sys_url + 'list_public_stories/?sort='+ this.order;
+		}
+	});
+
+	Devclub.Collections.CompletedStories = Backbone.Collection.extend({
+		url: function () {
+			return sys_url + 'list_completed_stories/';
 		}
 	});
 
@@ -100,12 +106,12 @@ $(document).ready(function () {
 								$('.logged_in').show();
 								$('.logged_out').hide();
 
-								$('#icebox li').not('.voted').find('.vote').show();
+								$('#personal_ul li').not('.voted').find('.vote').show();
 
 								$('.login').parents('.alert:first').hide();
 
 								$('#mail').html(res.email);
-								$('#icebox').parents('.col').show();
+								$('#personal_ul').parents('.col').show();
 
 								view.model = new Devclub.Models.User(res);
 
@@ -113,7 +119,7 @@ $(document).ready(function () {
 									$('.isAdmin').show();
 								}
 
-								Devclub.iceboxStoriesListView.collection.fetch();
+								Devclub.PersonalStoriesListView.collection.fetch();
 
 								makeSortable(view.model.get('isAdmin'));
 								//loggedIn(res);
@@ -199,9 +205,9 @@ $(document).ready(function () {
 
 			m.save(data, {
 				complete: function (model) {
-					Devclub.iceboxStoriesListView.collection.fetch();
+					Devclub.PersonalStoriesListView.collection.fetch();
 					Devclub.PublicStoriesListView.collection.fetch();
-					Devclub.activeStoriesListView.collection.fetch();
+					Devclub.OpenspaceListView.collection.fetch();
 
 					view.reset();
 					view.modelID = null;
@@ -228,7 +234,7 @@ $(document).ready(function () {
 			$('*[rel=tooltip]', this.el).tooltip();
 
 			if (Devclub.NavBar.model.get('email') != '') {
-				$('#icebox li').not('.voted').find('.vote').show();
+				$('#personal_ul li').not('.voted').find('.vote').show();
 			}
 		},
 
@@ -247,20 +253,24 @@ $(document).ready(function () {
 		}
 	});
 
-	Devclub.Views.ActiveStoriesList = Devclub.Views.StoriesList.extend({
-		el: '#openspace'
+	Devclub.Views.OpenspaceList = Devclub.Views.StoriesList.extend({
+		el: '#openspace_ul'
 	});
 
 	Devclub.Views.BacklogStoriesList = Devclub.Views.StoriesList.extend({
 		el: '#backlog'
 	});
 
-	Devclub.Views.IceboxStoriesList = Devclub.Views.StoriesList.extend({
-		el: '#icebox'
+	Devclub.Views.PersonalStoriesList = Devclub.Views.StoriesList.extend({
+		el: '#personal_ul'
 	});
 
 	Devclub.Views.PublicStoriesList = Devclub.Views.StoriesList.extend({
-		el: '#public'
+		el: '#public_ul'
+	});
+
+	Devclub.Views.CompletedStoriesList = Devclub.Views.StoriesList.extend({
+		el: '#completed_ul'
 	});
 
 	Devclub.Views.Story = Backbone.View.extend({
@@ -283,7 +293,7 @@ $(document).ready(function () {
 			if (confirm("Kas olete kindel?")) {
 				$.get(sys_url + 'delete_story/' + this.model.get('ID'), function () {
 					view.remove();
-					Devclub.iceboxStoriesListView.collection.fetch();
+					Devclub.PersonalStoriesListView.collection.fetch();
 					Devclub.PublicStoriesListView.collection.fetch();
 				});
 			}
@@ -295,7 +305,7 @@ $(document).ready(function () {
 				'position': 0
 			}, {
 				complete: function (model, response) {
-					Devclub.iceboxStoriesListView.collection.fetch();
+					Devclub.PersonalStoriesListView.collection.fetch();
 					Devclub.PublicStoriesListView.collection.fetch();
 				}
 			});
@@ -306,7 +316,7 @@ $(document).ready(function () {
 				'position': -1
 			}, {
 				complete: function (model, response) {
-					Devclub.iceboxStoriesListView.collection.fetch();
+					Devclub.PersonalStoriesListView.collection.fetch();
 					Devclub.PublicStoriesListView.collection.fetch();
 				}
 			});
@@ -353,7 +363,7 @@ $(document).ready(function () {
 
 	Devclub.addView = new Devclub.Views.AddForm();
 
-	Devclub.activeStoriesListView = new Devclub.Views.ActiveStoriesList({
+	Devclub.OpenspaceListView = new Devclub.Views.OpenspaceList({
 		collection: new Devclub.Collections.ActiveStories()
 	});
 
@@ -361,11 +371,15 @@ $(document).ready(function () {
 		collection: new Devclub.Collections.BacklogStories()
 	});
 
-	Devclub.iceboxStoriesListView = new Devclub.Views.IceboxStoriesList({
+	Devclub.PersonalStoriesListView = new Devclub.Views.PersonalStoriesList({
 		collection: new Devclub.Collections.IceboxStories()
 	});
 
 	Devclub.PublicStoriesListView = new Devclub.Views.PublicStoriesList({
+		collection: new Devclub.Collections.PublicStories()
+	});
+
+	Devclub.CompletedStoriesListView = new Devclub.Views.CompletedStoriesList({
 		collection: new Devclub.Collections.CompletedStories()
 	});
 
@@ -373,6 +387,7 @@ $(document).ready(function () {
 	Devclub.Routers.Main = Backbone.Router.extend({
 		routes: {
 			"sort/:order": "sort",
+			"list/:list": "page",
 			"/*":"void"
 		},
 
@@ -399,11 +414,11 @@ $(document).ready(function () {
 					id: $(ui.item).data('sid')
 				});
 				model.save({
-					'status': $(ui.item).parent().attr('id'),
+					'status': $(ui.item).parent().data('status'),
 					'position': $(ui.item).index()
 				}, {
 					complete: function (model, response) {
-						Devclub.iceboxStoriesListView.collection.fetch();
+						Devclub.PersonalStoriesListView.collection.fetch();
 						Devclub.PublicStoriesListView.collection.fetch();
 					}
 				});
@@ -420,9 +435,15 @@ $(document).ready(function () {
 
 
 	$("#story_form input[name=authors]").autocomplete({
-		source: sys_url + "devclub/author_list",
+		source: sys_url + "devclubee/author_list",
 		minLength: 2,
 		select: function (event, ui) {
 		}
+	});
+
+	$('.nav-pills li a').click(function(){
+
+		$('#'+$(this).data('toggle')).toggleClass('hidden');
+		$(this).parent().toggleClass('active');
 	});
 });

@@ -7,11 +7,12 @@
     padding:0 10px;
 }
 
-section ul{
+.col ul{
     margin: 0;
     padding: 0;
 }
-section li{
+
+.col li{
     list-style: none;
     padding: 5px 10px;
     margin: 2px;
@@ -21,10 +22,10 @@ section li{
     border-radius: 3px;
 }
 
-section .vote{
+.col .vote{
     display: none;
 }
-section li.voted{
+.col li.voted{
     border: 1px solid #f4d313;
     background-color: #fff9dc;
 }
@@ -62,14 +63,14 @@ section li.voted{
     display: none;
 }
 
-section li .icon-pencil{
+.col li .icon-pencil{
     cursor: pointer;
     float:right;
     opacity: 0.2;
     margin: 2px 4px 0 0;
 }
 
-section li .icon-pencil:hover{
+.col li .icon-pencil:hover{
     opacity: 0.4;
 }
 
@@ -77,4 +78,15 @@ section li .icon-pencil:hover{
     .row-fluid .span4{
         width:100%;
     }
+}
+
+#personal_ul li{
+    cursor: row-resize;
+}
+
+.col{
+    border: 1px dotted #bebebe;
+    padding:3px;
+    border-radius: 5px;
+    margin-bottom: 10px;
 }

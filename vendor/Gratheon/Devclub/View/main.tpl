@@ -6,24 +6,9 @@
 <div id="navbar" class="navbar navbar-inverse">
 	<div class="navbar-inner">
 		<div class="container">
-			<a class="brand" href="#">Devclub: ettekanne valimine</a>
-		{*
-			  <div class="btn-group pull-left">
-				  <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-					  <i class="icon-user"></i> Authenticate <span class="caret"></span>
-				  </a>
-
-				  <ul class="dropdown-menu">
-					  <li><a href="#google_auth">Google</a></li>
-					  <li><a href="#facebook_auth">Facebook</a></li>
-					  <li class="divider"></li>
-				  </ul>
-			  </div>
-
-  *}
+			<a class="brand" href="#">Devclub: ettekande valimine</a>
 
 			<ul class="nav">
-
 				<li>
 					<a href="#" class="login logged_out" title="Sign-in with BrowserID" style="{if $email}display: none;{/if}"><i class="icon-user icon-white"></i>
 						Sisene</a></li>
@@ -35,7 +20,7 @@
 				<li class="dropdown">
 					<a href="#" class="dropdown-toggle"
 					   data-toggle="dropdown">
-						Sorteerimine
+						Sorteeri
 						<b class="caret"></b>
 					</a>
 					<ul class="dropdown-menu">
@@ -81,36 +66,50 @@
 	<a href="#" class="btn btn-cancel" style="display: none;">Loobu</a>
 </form>
 
-<section class="row-fluid">
-	<div class="col span4" style="{if !$email}display: none;{/if}">
-		<h2>Huvitav mulle</h2>
-		<div class="alert alert-error isAdmin" style="display: none;">
+<div class="alert alert-error isAdmin" style="display: none;">
+	<button class="close" data-dismiss="alert">×</button>
+	Oled nüüd <strong>eriline</strong> ja saad kustutada teiste kasutajate ettekanned. Mäleta vastutuse eest, spiderman
+</div>
+
+
+<ul class="nav nav-pills">
+	<li class="active"><a data-toggle="public" href="#"> Avalik top {if $distinct_users}
+		<span class="label" rel="tooltip" title="Kokku hääletajat">{$distinct_users}</span>{/if}</a></li>
+	<li class=""><a data-toggle="personal" href="#"> Isiklik top</a></li>
+	<li class=""><a data-toggle="plans" href="#"> Ettevalmistamisel</a></li>
+	<li class=""><a data-toggle="completed" href="#"> Eelmised</a></li>
+	<li class=""><a data-toggle="openspace" href="#"> Sooviks kuulda</a></li>
+</ul>
+
+<div class="row">
+	<div id="public" class="col span5">
+		<ul id="public_ul" data-status="icebox"></ul>
+	</div>
+
+	<div id="personal" class="col hidden span5">
+	{if !$voted}
+		<div class="alert alert-info">
 			<button class="close" data-dismiss="alert">×</button>
-			Oled nüüd <strong>eriline</strong> ja saad kustutada teiste kasutajate ettekanned. Mäleta vastutuse eest, spiderman
+			Ettekanned saab hinnata <strong>sorteerimisega</strong>
+			<i class="icon-resize-vertical"></i>
 		</div>
-		<ul id="icebox" class="sortable"></ul>
+	{/if}
+		<ul id="personal_ul" class="sortable" data-status="icebox"></ul>
 	</div>
 
-	<div class="span4">
-		<div class="col">
-			<h2>Huvitavad {if $distinct_users}{$distinct_users} kasutajatele{else}kõigile{/if}</a></h2>
-
-			<ul id="public"></ul>
-		</div>
+	<div id="plans" class="col hidden span5">
+		<ul id="backlog" class="sortable" data-status="backlog"></ul>
 	</div>
 
-
-	<div class="span4">
-		<div class="col"><h2>Töötlemisel</h2>
-			<ul id="backlog" class="sortable"></ul>
-		</div>
-
-		<div style="margin-top:20px;" class="col"><h2>Tahaks kuulda</h2>
-			<ul id="openspace" class="sortable"></ul>
-		</div>
+	<div id="completed" class="col hidden span5">
+		<ul id="completed_ul" class="sortable" data-status="completed"></ul>
 	</div>
 
-</section>
+	<div id="openspace" class="col hidden span5">
+		<ul id="openspace_ul" class="sortable" data-status="openspace"></ul>
+	</div>
+</div>
+</div>
 
 {literal}
 <script type="text/template" id="story_item_template">
@@ -129,8 +128,8 @@
 
 
 	<% if(rate) { %>
-	<span class="badge" rel="tooltip" title="число голосовавших"><i class="icon-user"></i> <%=votes%></span>
-	<span class="badge badge-success" rel="tooltip" title="среднее по позициям: <%=distribution%>"><%=rate%></span>
+	<span class="badge" rel="tooltip" title="hääletusi"><i class="icon-user"></i> <%=votes%></span>
+	<span class="badge badge-success" rel="tooltip" title="keskmine: <%=distribution%>"><%=rate%></span>
 	<%
 	} %>
 
