@@ -4,6 +4,7 @@ var Devclub = {
 	Collections: [],
 	Models: []
 };
+
 $(document).ready(function () {
 
 	//Models
@@ -73,10 +74,19 @@ $(document).ready(function () {
 					if (view.model.get('email')) {
 						makeSortable(view.model.get('isAdmin'));
 					}
+					else{
+						$('.logged_in').hide();
+						$('.logged_out').show();
+						$('.nav a.logged_out').popover({
+							'content':'Войдите для голосования и добавления докладов',
+							'title':'Подсказка КО',
+							'placement':'bottom',
+							'trigger':'hover'
+						}).popover('show');
+					}
 				}
 			});
 		},
-
 
 		toggleAbout: function () {
 			$('#about').toggle();
@@ -120,6 +130,7 @@ $(document).ready(function () {
 								}
 
 								Devclub.PersonalStoriesListView.collection.fetch();
+								Devclub.CompletedStoriesListView.collection.fetch();
 
 								makeSortable(view.model.get('isAdmin'));
 								//loggedIn(res);
@@ -139,9 +150,12 @@ $(document).ready(function () {
 
 		logout: function () {
 			navigator.id.logout();
-			$.get(sys_url + 'devclub/logout/', function () {
+			$.get(sys_url + 'logout/', function () {
+//				Devclub.PersonalStoriesListView.collection.fetch();
+//				Devclub.CompletedStoriesList.collection.fetch();
 				window.location.reload();
 			});
+			return false;
 
 		}
 	});
@@ -162,6 +176,7 @@ $(document).ready(function () {
 			$('input[name=authors]', this.el).val(m.get('authors'));
 			$('textarea', this.el).val(m.get('description'));
 			this.modelID = m.get('ID');
+			$(this.el).show();
 		},
 
 		reset: function () {
@@ -233,15 +248,19 @@ $(document).ready(function () {
 
 			$('*[rel=tooltip]', this.el).tooltip();
 
-			if (Devclub.NavBar.model.get('email') != '') {
+			if (Devclub.NavBar.model.get('email') != null) {
 				$('#personal_ul li').not('.voted').find('.vote').show();
+			}
+			else{
+				$('.logged_in').hide();
+				$('.logged_out').show();
 			}
 		},
 
 		add: function (model) {
-			var contact_model = new Devclub.Models.Story(model);
+//			var contact_model = new Devclub.Models.Story(model);
 			var view = new Devclub.Views.Story({
-				model: contact_model
+				model: model
 			});
 
 			var html = view.render().el;
@@ -281,7 +300,9 @@ $(document).ready(function () {
 			'click .close': 'deleteStory',
 			'click': 'slide',
 			'click .vote': 'vote',
-			'click .unvote': 'unvote'
+			'click .unvote': 'unvote',
+			'click .yearvote': 'yearvote',
+			'click .yearunvote': 'yearunvote'
 		},
 
 		slide: function () {
@@ -290,7 +311,7 @@ $(document).ready(function () {
 
 		deleteStory: function () {
 			var view = this;
-			if (confirm("Kas olete kindel?")) {
+			if (confirm("А вы уверены, что хотите НАВСЕГДА удалить из списка?")) {
 				$.get(sys_url + 'delete_story/' + this.model.get('ID'), function () {
 					view.remove();
 					Devclub.PersonalStoriesListView.collection.fetch();
@@ -299,6 +320,10 @@ $(document).ready(function () {
 			}
 		},
 
+		replaceURLWithHTMLLinks:function(text) {
+		    var exp = /(\b(https?|ftp|file):\/\/([-A-Z0-9+&@#%?=~_|!:,.;]*)([-A-Z0-9+&@#%?\/=~_|!:,.;]*)[-A-Z0-9+&@#\/%=~_|])/ig;
+		    return text.replace(exp, "<a href='$1' target='_blank'>$3</a>");
+		},
 
 		vote: function () {
 			this.model.save({
@@ -311,6 +336,7 @@ $(document).ready(function () {
 			});
 			return false;
 		},
+
 		unvote: function () {
 			this.model.save({
 				'position': -1
@@ -319,6 +345,24 @@ $(document).ready(function () {
 					Devclub.PersonalStoriesListView.collection.fetch();
 					Devclub.PublicStoriesListView.collection.fetch();
 				}
+			});
+			return false;
+		},
+
+		yearunvote: function(){
+			$.post(sys_url+'yearly_unvote/',{
+				'ID': this.model.get('ID')
+			},function(){
+				Devclub.CompletedStoriesListView.collection.fetch();
+			});
+			return false;
+		},
+
+		yearvote: function(){
+			$.post(sys_url+'yearly_vote/',{
+				'ID': this.model.get('ID')
+			},function(){
+				Devclub.CompletedStoriesListView.collection.fetch();
 			});
 			return false;
 		},
@@ -334,10 +378,13 @@ $(document).ready(function () {
 			/*
 			if (this.model.get('creator_email') == Devclub.NavBar.model.get('email') || Devclub.NavBar.model.get('isAdmin')) {
 			}*/
-			tplvars.owner = this.model.get('owner');
+			if(/*Devclub.NavBar.model.get('isAdmin')==true ||*/ this.model.get('owner') == 1){
+				tplvars.owner = true;
+			}
 
 			if (tplvars.description != null) {
 				tplvars.description = tplvars.description.replace(/\n/g, '<br />');
+				tplvars.description = this.replaceURLWithHTMLLinks(tplvars.description);
 			}
 
 			var html = this.template(tplvars);
@@ -388,6 +435,7 @@ $(document).ready(function () {
 		routes: {
 			"sort/:order": "sort",
 			"list/:list": "page",
+			"top": "top",
 			"/*":"void"
 		},
 
@@ -398,6 +446,13 @@ $(document).ready(function () {
 		sort: function (order) {
 			Devclub.PublicStoriesListView.collection.order = order;
 			Devclub.PublicStoriesListView.collection.fetch();
+		},
+
+		top: function(){
+			$('#public').addClass('hidden');
+			$('#completed').removeClass('hidden');
+			$('a[data-toggle=completed]').parent().addClass('active');
+			$('a[data-toggle=public]').parent().removeClass('active');
 		}
 	});
 
@@ -424,18 +479,19 @@ $(document).ready(function () {
 				});
 
 
-			}
+			},
+			handle: '.draghandle'
 		};
 
 		if (crosslist) {
 			opt.connectWith = ".sortable";
 		}
-		$('.sortable').sortable(opt).disableSelection();
+		$('.sortable').sortable(opt).find('.draghandle').disableSelection();
 	}
 
 
 	$("#story_form input[name=authors]").autocomplete({
-		source: sys_url + "devclubee/author_list",
+		source: sys_url + "author_list",
 		minLength: 2,
 		select: function (event, ui) {
 		}
